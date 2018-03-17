@@ -1,6 +1,11 @@
 # coding=gbk
+import os
+import sys
+import re
+import logging
 import time
-import os, sys, re, logging, time, subprocess, shutil
+import subprocess
+import shutil
 from bili_dw import *
 from multiprocessing import Pool
 
@@ -46,7 +51,9 @@ def check_diary(dir):
 
 def file_rename(name):
     term_name = m_name = ''
+    #获取后缀名
     suffix = '.' + name.split('.')[-1]
+    #重命名
     if '《' in name:
         for x in re.findall(reg1, name):
             for i in x:
@@ -67,15 +74,15 @@ def file_rename(name):
             for i in re.findall(reg5, name):
                 term_name = (i.replace('(', ''))
         new_name = m_name + term_name + suffix
-        #print(new_name)
-
+        logger.debug("新的名字为 %s" % new_name)
+        #建立文件夹
         logger.debug('Run task %s (%s)...' % (new_name, os.getpid()))
         start = time.time()
         os.rename(name, new_name)
         logger.info('文件  %s  重命名为  %s' % (name, new_name))
         check_diary(mp3_dir + '\\' + m_name)
         check_diary(mp4_dir + '\\' + m_name)
-
+        #下载封面
         for z in re.findall(reg4, name):
             #print(z)
             bili_info = bi(z, mp3_dir + '\\' + m_name + '\\')
@@ -83,10 +90,9 @@ def file_rename(name):
             # bi(z, mp4_dir + '\\' + m_name + '\\')
             #采用移动文件的方式减小服务器负载
             shutil.copy(mp3_dir + '\\' + m_name + '\\' + 'cover.jpg',mp4_dir + '\\' + m_name + '\\' + 'cover.jpg')
-
-
+        #创建ffmpeg命令，添加到管道
         code = bulid_cfg(new_name, mp3_dir + '\\' + m_name + '\\' + new_name.replace('mp4', 'mp3'))
-
+        #如果转码未出错，归档文件
         if code:
             shutil.move(new_name, mp4_dir + '\\' + m_name)
         end = time.time()
