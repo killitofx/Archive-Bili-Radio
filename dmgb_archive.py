@@ -6,8 +6,8 @@ import logging
 import time
 import subprocess
 import shutil
-from bili_dw import *
 from multiprocessing import Pool
+
 
 reg1 = r'《(.*?)》'
 reg2 = r'第(.*?)期'
@@ -29,11 +29,17 @@ hterm.setLevel(logging.INFO)
 hfile = logging.FileHandler("access.log")    #创建一个文件记录日志的handler,设置级别为info
 hfile.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s  - %(levelname)s - %(message)s')   #创建一个全局的日志格式
-format_cs = logging.Formatter('%(levelname)s - %(asctime)s - %(message)s')
-#hterm.setFormatter(format_cs)   #将日志格式应用到终端handler
+format_cs = logging.Formatter('[%(levelname)s]  %(message)s')
+hterm.setFormatter(format_cs)   #将日志格式应用到终端handler
 hfile.setFormatter(formatter)   #将日志格式应用到文件handler
 #logger.addHandler(hterm)    #将终端handler添加到logger
 logger.addHandler(hfile)    #将文件handler添加到logger
+
+try:
+    from bili_dw import *
+except:
+    logger.addHandler(hterm)
+
 
 def check_diary(dir):
     check1 = os.path.exists(dir)
@@ -85,13 +91,16 @@ def file_rename(name):
         check_diary(mp3_dir + '\\' + m_name)
         check_diary(mp4_dir + '\\' + m_name)
         #下载封面
-        for z in re.findall(reg4, name):
-            #print(z)
-            bili_info = bi(z, mp3_dir + '\\' + m_name + '\\')
-            #logger.info(bili_info)
-            # bi(z, mp4_dir + '\\' + m_name + '\\')
-            #采用移动文件的方式减小服务器负载
-            shutil.copy(mp3_dir + '\\' + m_name + '\\' + 'cover.jpg',mp4_dir + '\\' + m_name + '\\' + 'cover.jpg')
+        try:
+            for z in re.findall(reg4, name):
+                #print(z)
+                bili_info = bi(z, mp3_dir + '\\' + m_name + '\\')
+                #logger.info(bili_info)
+                # bi(z, mp4_dir + '\\' + m_name + '\\')
+                #采用移动文件的方式减小服务器负载
+                shutil.copy(mp3_dir + '\\' + m_name + '\\' + 'cover.jpg',mp4_dir + '\\' + m_name + '\\' + 'cover.jpg')
+        except:
+            logger.warning("调用封面下载器失败")
         #创建ffmpeg命令，添加到管道
         code = bulid_cfg(new_name, mp3_dir + '\\' + m_name + '\\' + new_name.replace('mp4', 'mp3'))
         #如果转码未出错，归档文件
@@ -115,6 +124,9 @@ def bulid_cfg(name, locate):
 if __name__=='__main__':
     check_diary(mp3_dir)
     check_diary(mp4_dir)
+    if not os.path.exists(homedir+"/bili_dw.py"):
+        logger.addHandler(hterm)
+        logger.warning("找不到bili_d.py")
     p = Pool()
     for i in os.listdir(work_locate):
         for k in support_list:
