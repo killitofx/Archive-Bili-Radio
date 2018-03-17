@@ -28,7 +28,7 @@ hterm =  logging.StreamHandler()    #创建一个终端输出的handler,设置级别为error
 hterm.setLevel(logging.INFO)
 hfile = logging.FileHandler("access.log")    #创建一个文件记录日志的handler,设置级别为info
 hfile.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')   #创建一个全局的日志格式
+formatter = logging.Formatter('%(asctime)s  - %(levelname)s - %(message)s')   #创建一个全局的日志格式
 format_cs = logging.Formatter('%(levelname)s - %(asctime)s - %(message)s')
 hterm.setFormatter(format_cs)   #将日志格式应用到终端handler
 hfile.setFormatter(formatter)   #将日志格式应用到文件handler
@@ -39,13 +39,15 @@ def check_diary(dir):
     check1 = os.path.exists(dir)
     if check1:
         logger.info("%s文件夹已找到" % dir)
+        return
+
     else:
         logger.info("未发现%s文件夹，创建... " % dir)
         try:
             os.makedirs(dir)
-            logger.info("创建成功")
+            logger.info("%s创建成功" % dir)
         except:
-            logger.error("创建失败，请检查权限")
+            logger.error("%s创建失败，请检查权限" % dir)
             time.sleep(10)
             sys.exit()
 
@@ -96,7 +98,7 @@ def file_rename(name):
         if code:
             shutil.move(new_name, mp4_dir + '\\' + m_name)
         end = time.time()
-        logger.debug('Task %s runs %0.2f seconds.\n' % (new_name, (end - start)))
+        logger.debug('Task %s runs %0.2f seconds.' % (new_name, (end - start)))
 
 def bulid_cfg(name, locate):
     cfg = 'ffmpeg -i data1 -vn  -acodec libmp3lame -ac 2 -qscale:a 4 -ar 48000  data2'
@@ -120,6 +122,6 @@ if __name__=='__main__':
                 p.apply_async(file_rename, args=(i,))
     p.close()
     p.join()
-    logging.info("所有任务完成")
+    logging.info("所有任务完成\n")
 
 
