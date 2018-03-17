@@ -30,9 +30,9 @@ hfile = logging.FileHandler("access.log")    #创建一个文件记录日志的handler,设置
 hfile.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s  - %(levelname)s - %(message)s')   #创建一个全局的日志格式
 format_cs = logging.Formatter('%(levelname)s - %(asctime)s - %(message)s')
-hterm.setFormatter(format_cs)   #将日志格式应用到终端handler
+#hterm.setFormatter(format_cs)   #将日志格式应用到终端handler
 hfile.setFormatter(formatter)   #将日志格式应用到文件handler
-logger.addHandler(hterm)    #将终端handler添加到logger
+#logger.addHandler(hterm)    #将终端handler添加到logger
 logger.addHandler(hfile)    #将文件handler添加到logger
 
 def check_diary(dir):
@@ -88,7 +88,7 @@ def file_rename(name):
         for z in re.findall(reg4, name):
             #print(z)
             bili_info = bi(z, mp3_dir + '\\' + m_name + '\\')
-            logger.info(bili_info)
+            #logger.info(bili_info)
             # bi(z, mp4_dir + '\\' + m_name + '\\')
             #采用移动文件的方式减小服务器负载
             shutil.copy(mp3_dir + '\\' + m_name + '\\' + 'cover.jpg',mp4_dir + '\\' + m_name + '\\' + 'cover.jpg')
