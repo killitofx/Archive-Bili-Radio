@@ -4,7 +4,7 @@ import os
 import logging
 import sys
 
-
+logging.basicConfig(level=logging.INFO,format = '[%(levelname)s]  %(message)s')
 reg = r'<meta data-vue-meta="true" itemprop="thumbnailUrl" content="(.*?)"/>'
 def gethtml(url):
     try:
@@ -38,18 +38,21 @@ def download(url,root,name):
         logging.error("封面下载失败")
         return "封面下载失败"
 
-def ds(reg,a):
-    for i in re.findall(reg,a):
-        #print(i)
-        return(i)
+# def ds(reg,a):
+#     for i in re.findall(reg,a):
+#         #print(i)
+#         return(i)
 
 #内部调用代码
-def bi(num,root):
-    a = gethtml("https://www.bilibili.com/video/av%s/"%(num))
-    url = ds(reg, a)
-    logging.info(url)
-    info = download(url, root, "cover")
+def bi(num,root,name = "cover"):
+    html = gethtml("https://www.bilibili.com/video/av%s/"%(num))
+    #url = ds(reg, html)
+    for i in re.findall(reg, html):
+        url = i
+    info = download(url, root, name)
     return info
+
+
 
 #外部调用代码
 if __name__ =='__main__':
@@ -68,8 +71,8 @@ if __name__ =='__main__':
             num = sys.argv.index('-r')
             reg = sys.argv[num + 1]
     #print(av, root, name)
-    html = gethtml("https://www.bilibili.com/video/av%s/"%(av))
-    url = ds(reg, html)
-    info = download(url, locate, name)
-    print(info)
+    # html = gethtml("https://www.bilibili.com/video/av%s/"%(av))
+    # url = ds(reg, html)
+    # info = download(url, locate, name)
+    bi(av, locate, name)
 
