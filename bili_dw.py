@@ -1,25 +1,10 @@
 import requests
 import re
 import os
+import logging
 
-#root = "D://pics//"
-#reg = r'<img src="(.*?)" style="display:none;" class="cover_image"/>'
+
 reg = r'<meta data-vue-meta="true" itemprop="thumbnailUrl" content="(.*?)"/>'
-# def k(x):
-# 	s = False
-# 	while s != True:
-# 		float_number = str(x)
-# 		value = re.compile(r'^[-+]?[0-9]+$')
-# 		result = value.match(float_number)
-# 		if result:
-# 			#print (float_number)
-# 			s = True
-# 			return float_number;
-# 			#return 1;
-# 		else:
-# 			print("输入错误，请输入数字")
-# 			return 0;
-
 def gethtml(url):
     try:
         kv = {'user-agent':'Mozilla/5.0'}
@@ -27,9 +12,9 @@ def gethtml(url):
         r.raise_for_status()
         r.encoding = r.apparent_encoding
         return (r.text);
-        print("爬取成功")
+        logging.info("网页下载成功")
     except:
-       print("爬取失败")
+       logging.error("网页下载失败")
 
 def download(url,root):
     #path = root + url.split('/')[-1]
@@ -43,33 +28,25 @@ def download(url,root):
             with open(path, 'wb') as f:
                 f.write(r.content)
                 f.close()
-                print("文件保存成功 ",end="")
+                logging.info("封面保存成功%s" % path)
+                return "封面保存成功%s" % path
         else:
-            print("文件已存在 ",end="")
+            logging.warning("封面已存在%s" % path)
+            return "封面已存在%s" % path
     except:
-        print("爬取失败")
+        logging.error("封面下载失败")
+        return "封面下载失败"
 
 def ds(reg,a):
     for i in re.findall(reg,a):
         #print(i)
         return(i)
-    
-# num = 0
-# while num == 0:
-#         num = k(input("请输入Bilibili视频av号："))
-#         a = gethtml("https://www.bilibili.com/video/av%s/"%(num))
-#         url = ds(reg,a)
-#         download(url,root)
-#         print("\n")
-#         num = 0
-       
-# a = gethtml("https://www.bilibili.com/video/av%s/"%(num))
-# url = ds(reg, a)
-# download(url, root)
+
 
 def bi(num,root):
     a = gethtml("https://www.bilibili.com/video/av%s/"%(num))
     url = ds(reg, a)
-    print(url)
-    download(url, root)
+    logging.info(url)
+    info = download(url, root)
+    return info
 
