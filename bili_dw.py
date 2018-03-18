@@ -56,7 +56,7 @@ def bi(num,root,name = "cover"):
 
 #外部调用代码
 if __name__ =='__main__':
-    locate = 'D://pics//'
+    locate = os.getcwd() + '\\'
     av = sys.argv[1]
     name = av
     #print(sys.argv)
