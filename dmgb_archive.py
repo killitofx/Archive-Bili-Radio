@@ -6,6 +6,7 @@ import logging
 import time
 import subprocess
 import shutil
+import random
 from multiprocessing import Pool
 
 
@@ -44,14 +45,14 @@ except:
 def check_diary(dir):
     check1 = os.path.exists(dir)
     if check1:
-        logger.info("%s文件夹已找到" % dir)
+        logger.debug("%s文件夹已找到" % dir)
         return
 
     else:
-        logger.info("未发现%s文件夹，创建... " % dir)
+        logger.debug("未发现%s文件夹，创建... " % dir)
         try:
             os.makedirs(dir)
-            logger.info("%s创建成功" % dir)
+            logger.debug("%s创建成功" % dir)
         except:
             logger.error("%s创建失败，请检查权限" % dir)
             time.sleep(10)
@@ -64,9 +65,9 @@ def file_rename(name):
     #重命名
     if '《' in name:
         for x in re.findall(reg1, name):
-            for i in x:
-                m_name += i
-
+            m_name = x
+#            for i in x:
+#                m_name += i
         if '番外' in name:
             for i in re.findall(reg5, name):
                 term_name = (i.replace('(', ''))
@@ -75,39 +76,46 @@ def file_rename(name):
                 term_name = (i.replace('(', ''))
         elif '全一期' in name:
             term_name = '全一期'
-        elif '第':
+        elif '第'in name:
             for y in re.findall(reg2, name):
                 term_name = '第' + y[0] + '期'
         else:
-            for i in re.findall(reg5, name):
-                term_name = (i.replace('(', ''))
+            for s in re.findall(reg5, name):
+                term_name = (s.replace('(', ''))
         new_name = m_name + term_name + suffix
-        logger.debug("新的名字为 %s" % new_name)
-        #建立文件夹
-        logger.debug('Run task %s (%s)...' % (new_name, os.getpid()))
-        start = time.time()
-        os.rename(name, new_name)
-        logger.info('文件  %s  重命名为  %s' % (name, new_name))
-        check_diary(mp3_dir + '\\' + m_name)
-        check_diary(mp4_dir + '\\' + m_name)
-        #下载封面
-        try:
-            for z in re.findall(reg4, name):
-                #print(z)
-                bili_info = bi(z, mp3_dir + '\\' + m_name + '\\')
-                #logger.info(bili_info)
-                # bi(z, mp4_dir + '\\' + m_name + '\\')
-                #采用移动文件的方式减小服务器负载
-                shutil.copy(mp3_dir + '\\' + m_name + '\\' + 'cover.jpg',mp4_dir + '\\' + m_name + '\\' + 'cover.jpg')
-        except:
-            logger.warning("调用封面下载器失败")
-        #创建ffmpeg命令，添加到管道
-        code = bulid_cfg(new_name, mp3_dir + '\\' + m_name + '\\' + new_name.replace('mp4', 'mp3'))
-        #如果转码未出错，归档文件
-        if code:
-            shutil.move(new_name, mp4_dir + '\\' + m_name)
-        end = time.time()
-        logger.debug('Task %s runs %0.2f seconds.' % (new_name, (end - start)))
+        logger.info("新的名字为 %s" % new_name)
+        run(name, m_name, new_name)
+
+#name 原名 m_name 文件夹名 new_name 新名字
+def run(name,m_name,new_name):
+    delay = random.randint(0, 100)/100
+    time.sleep(delay)
+    #建立文件夹
+    logger.debug("task %s delay %s..." % (new_name, delay))
+    logger.debug('Run task %s (%s)...' % (new_name, os.getpid()))
+    start = time.time()
+    os.rename(name, new_name)
+    logger.info('文件  %s  重命名为  %s' % (name, new_name))
+    check_diary(mp3_dir + '\\' + m_name)
+    check_diary(mp4_dir + '\\' + m_name)
+    #下载封面
+    try:
+        for z in re.findall(reg4, name):
+            #print(z)
+            bili_info = bi(z, mp3_dir + '\\' + m_name + '\\')
+            #logger.info(bili_info)
+            # bi(z, mp4_dir + '\\' + m_name + '\\')
+            #采用移动文件的方式减小服务器负载
+            shutil.copy(mp3_dir + '\\' + m_name + '\\' + 'cover.jpg',mp4_dir + '\\' + m_name + '\\' + 'cover.jpg')
+    except:
+        logger.warning("调用封面下载器失败")
+    #创建ffmpeg命令，添加到管道
+    code = bulid_cfg(new_name, mp3_dir + '\\' + m_name + '\\' + new_name.replace('mp4', 'mp3'))
+    #如果转码未出错，归档文件
+    if code:
+        shutil.move(new_name, mp4_dir + '\\' + m_name)
+    end = time.time()
+    logger.debug('Task %s runs %0.2f seconds.' % (new_name, (end - start)))
 
 def bulid_cfg(name, locate):
     cfg = 'ffmpeg -i data1 -vn  -acodec libmp3lame -ac 2 -qscale:a 4 -ar 48000  data2'
@@ -121,19 +129,29 @@ def bulid_cfg(name, locate):
     else:
         logger.error('%s转码失败，命令为 %s' % (name, cfg))
 
-if __name__=='__main__':
-    check_diary(mp3_dir)
-    check_diary(mp4_dir)
-    if not os.path.exists(homedir+"/bili_dw.py"):
-        logger.addHandler(hterm)
-        logger.warning("找不到bili_d.py")
-    p = Pool()
+
+def pool(p = 8):
+    p = Pool(p)
     for i in os.listdir(work_locate):
         for k in support_list:
             if k in i:
                 p.apply_async(file_rename, args=(i,))
     p.close()
     p.join()
-    logging.info("所有任务完成\n")
 
+
+
+if __name__=='__main__':
+    logging.info("\n\n")
+    check_diary(mp3_dir)
+    check_diary(mp4_dir)
+    if not os.path.exists(homedir + "/bili_dw.py"):
+        logger.addHandler(hterm)
+        logger.warning("\n\n找不到bili_d.py")
+    if sys.argv.count('-p'):
+        num = sys.argv.index('-p')
+        p = int(sys.argv[num + 1])
+        pool(p)
+    else:
+        pool()
 
