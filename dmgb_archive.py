@@ -76,6 +76,11 @@ def file_rename(name):
                 term_name = (i.replace('(', ''))
         elif '全一期' in name:
             term_name = '全一期'
+        elif '(上)'in name or '(下)'in name or '上期'in name or '下期' in name:
+            for s in re.findall(reg5, name):
+                term_name = (s.replace('(', ''))
+                # term_name = term_name.replace("(", "")
+                # term_name = term_name.replace(")", "")
         elif '第'in name:
             for y in re.findall(reg2, name):
                 term_name = '第' + y[0] + '期'
